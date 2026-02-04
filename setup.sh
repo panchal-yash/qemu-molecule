@@ -19,6 +19,14 @@ echo "Download VMS"
 mkdir -p /var/lib/libvirt/images
 cd /var/lib/libvirt/images
 wget https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img
+wget https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+
+
+
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N ""
+
+qemu-img convert -f qcow2 -O raw /var/lib/libvirt/images/jammy-server-cloudimg-amd64.img /var/lib/libvirt/images/jammy-server-cloudimg-amd64.raw
+qemu-img convert -f qcow2 -O raw /var/lib/libvirt/images/noble-server-cloudimg-amd64.img /var/lib/libvirt/images/noble-server-cloudimg-amd64.raw
 
 
 #!/bin/bash

@@ -12,7 +12,7 @@
 
     - name: Resize raw disk
       ansible.builtin.command: >
-        qemu-img resize /tmp/molecule-{{ item.name }}.raw {{ item.disk_size | default('20G') }}
+        qemu-img resize /tmp/molecule-{{ item.name }}.raw {{ item.disk_size }}
       loop: "{{ molecule_yml.platforms }}"
 
     - name: Create cloud-init directory

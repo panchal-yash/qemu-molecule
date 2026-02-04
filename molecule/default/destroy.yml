@@ -12,12 +12,6 @@
       ignore_errors: true
       loop: "{{ molecule_yml.platforms }}"
 
-    - name: Remove SSH known hosts entry
-      ansible.builtin.command: >
-        ssh-keygen -f '/root/.ssh/known_hosts' -R '[127.0.0.1]:{{ item.ssh_port }}'
-      ignore_errors: true
-      loop: "{{ molecule_yml.platforms }}"
-
     - name: Clean up VM disk
       ansible.builtin.file:
         path: "/tmp/molecule-{{ item.name }}.raw"
