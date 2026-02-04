@@ -3,12 +3,16 @@
   hosts: localhost
   gather_facts: false
   tasks:
-    - name: Create disk from base image
+    - name: Create disk from raw base image
       ansible.builtin.command: >
-        qemu-img create -f qcow2 -b {{ item.image }} -F qcow2 
-        /tmp/molecule-{{ item.name }}.qcow2 {{ item.disk_size | default('20G') }}
+        cp {{ item.image }} /tmp/molecule-{{ item.name }}.raw
       args:
-        creates: "/tmp/molecule-{{ item.name }}.qcow2"
+        creates: "/tmp/molecule-{{ item.name }}.raw"
+      loop: "{{ molecule_yml.platforms }}"
+
+    - name: Resize raw disk
+      ansible.builtin.command: >
+        qemu-img resize /tmp/molecule-{{ item.name }}.raw {{ item.disk_size | default('20G') }}
       loop: "{{ molecule_yml.platforms }}"
 
     - name: Create cloud-init directory
@@ -28,6 +32,9 @@
               shell: /bin/bash
               ssh_authorized_keys:
                 - {{ lookup('file', (item.ssh_key | default('~/.ssh/id_rsa')) ~ '.pub') }}
+          runcmd:
+            - systemctl disable unattended-upgrades || true
+            - systemctl stop unattended-upgrades || true
         dest: "/tmp/cloud-init-{{ item.name }}/user-data"
         mode: '0644'
       loop: "{{ molecule_yml.platforms }}"
@@ -68,13 +75,15 @@
       ansible.builtin.shell: |
         qemu-system-x86_64 \
           -name {{ item.item.name }} \
-          -m {{ item.item.memory | default(2048) }} \
-          -smp {{ item.item.cpus | default(2) }} \
-          -hda /tmp/molecule-{{ item.item.name }}.qcow2 \
+          -m {{ item.item.memory }} \
+          -smp {{ item.item.cpus }} \
+          -drive file=/tmp/molecule-{{ item.item.name }}.raw,format=raw,if=none,id=disk0,cache=unsafe,aio=threads \
+          -device virtio-blk-pci,drive=disk0 \
           -cdrom /tmp/cloud-init-{{ item.item.name }}.iso \
-          -netdev user,id=net0,hostfwd=tcp::{{ item.item.ssh_port | default(2222) }}-:22 \
+          -netdev user,id=net0,hostfwd=tcp::{{ item.item.ssh_port }}-:22 \
           -device virtio-net-pci,netdev=net0 \
           -enable-kvm \
+          -cpu host \
           -daemonize \
           -display none \
           -pidfile /tmp/qemu-{{ item.item.name }}.pid
@@ -102,6 +111,6 @@
         dest: "{{ molecule_instance_config }}"
         mode: '0644'
 
-    - name: Sleep 90 seconds
+    - name: Wait for cloud-init to finish
       ansible.builtin.pause:
-        seconds: 90
+        seconds: 30

@@ -6,28 +6,22 @@ driver:
 
 platforms:
   - name: ubuntu2204-2225
-    image: /var/lib/libvirt/images/jammy-server-cloudimg-amd64.img
+    image: /var/lib/libvirt/images/jammy-server-cloudimg-amd64.raw
     memory: 2048
     cpus: 2
     disk_size: 20G
     ssh_port: 2225
     ssh_user: ubuntu
     ssh_key: ~/.ssh/id_rsa
-
-  - name: ubuntu2204-2222
-    image: /var/lib/libvirt/images/jammy-server-cloudimg-amd64.img
-    memory: 2048
-    cpus: 2
-    disk_size: 20G
-    ssh_port: 2222
-    ssh_user: ubuntu
-    ssh_key: ~/.ssh/id_rsa
+    disk_interface: virtio   # Try adding this
 
 provisioner:
   name: ansible
+  log: true
   playbooks:
     create: create.yml
     destroy: destroy.yml
-
+      #converge: install.yml
+    converge: /home/yash.panchal/qemu/qemu-molecule/package-testing/playbooks/pxb_80.yml
 verifier:
   name: ansible
