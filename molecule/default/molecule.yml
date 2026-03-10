@@ -30,7 +30,7 @@ platforms:
     memory: 2048
     cpus: 2
     disk_size: 20G
-    ssh_port: 2222
+    ssh_port: 2223
     ssh_user: ubuntu
     ssh_key: ~/.ssh/id_rsa
     disk_interface: virtio
